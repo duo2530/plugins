@@ -5,7 +5,7 @@ description: "Apply after completing a task, before declaring done. Verify again
 
 # Prove It Works
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Verify every task output by checking the real thing directly. Do not infer from proxies, self-reports, or "it compiles."
 

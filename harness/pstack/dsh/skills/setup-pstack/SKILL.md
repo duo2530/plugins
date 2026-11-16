@@ -5,7 +5,7 @@ description: Configure which models pstack uses per role and at what reasoning b
 
 # Setup pstack
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Write `~/.cursor/rules/pstack-models.mdc`, an always-applied rule that sets pstack's model per role.
 

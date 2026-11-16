@@ -1,8 +1,8 @@
 # pstack in DeepSeek Harness
 
-pstack skills use Cursor names. In DSH, read this file once per session, then map each Cursor name in a skill with the tables below. `<pstack>` means the folder that holds `skills/` and `docs/`. If a Cursor field has no row, drop it and say so. Never pass a field or value that a tool schema rejects.
+pstack skills use Cursor names. In DSH, load this skill once per session, then map each Cursor name in a skill with the tables below. If a Cursor field has no row, drop it and say so. Never pass a field or value that a tool schema rejects.
 
-This tree already changes two things for DSH. Every skill is model-invocable, so the `skill` tool loads any pstack skill by name. The `poteto-agent` and `comment-sicko` files under `agents/` are reference material for a brief, not agent types.
+This tree already changes two things for DSH. Every skill is model-invocable, so the `skill` tool loads any pstack skill by name. The `poteto-agent` and `comment-sicko` bundles are skills a delegate loads. They are not agent types.
 
 ## Tools
 
@@ -22,8 +22,8 @@ A skill body names its resources relative to its own directory, such as `playboo
 | Cursor | DSH |
 | --- | --- |
 | `subagent_type: generalPurpose` | Omit. Every `subagent` call is a fresh agent with its own context. |
-| `subagent_type: "poteto-agent"` | `subagent`, with `This is a poteto-mode delegate task. Load the poteto-mode skill with the skill tool and follow it in full before any work.` as the first line of `prompt`. |
-| `subagent_type: "comment-sicko"` | `subagent`, with the body of [`agents/comment-sicko.md`](../../agents/comment-sicko.md) as the brief. |
+| `subagent_type: "poteto-agent"` | `subagent`, with `Load the poteto-agent skill first. It tells you to load poteto-mode in full.` as the first line of `prompt`. |
+| `subagent_type: "comment-sicko"` | `subagent`, with `Load the comment-sicko skill first. Its body is the brief.` as the first line of `prompt`. |
 | `readonly: true` | There is no readonly agent type. Put `Do not edit files. Report only.` in the brief, then check `git status` yourself. |
 | `readonly: false` | Omit. |
 | `environment: "cloud"` | No per-agent machine. Give the worker its own checkout with the shell tool, such as `git worktree add <path> <base>`, and pass `<path>` as `cwd`. `create_worktree` also makes one, but it moves this session, so use it only when the parent is the one moving. |
@@ -69,7 +69,7 @@ Follow the skill with these changes.
 | `.cursor/skills/`, `~/.cursor/skills/` | `<project>/.dsh/skills/` for one repository, `$DSH_HOME/skills/` for every session. The bundle shape is `<root>/<name>/SKILL.md`, one level deep. |
 | `~/.cursor/plugins/`, `.cursor-plugin/plugin.json` | No plugin manifest. pstack ships as this skills tree, so its own folder is the file to edit. |
 | `.cursor/rules/*.mdc` | `AGENTS.md`. `$DSH_HOME/AGENTS.md` applies to every session, and the project's file applies to one repository. |
-| `https://github.com/cursor/plugins/blob/main/pstack/<path>` | `<pstack>/<path>` when that file ships in this tree. Read the local copy and never fetch it. Give the user the URL when they need a link. |
+| `https://github.com/cursor/plugins/blob/main/pstack/<path>` | A file outside the bundle you are following is linked on GitHub, because DSH installs bundles into one flat root. Read a file inside the bundle from the base directory the `skill` tool reports, and never fetch a copy the tree already links. Give the user the URL when they need a link. |
 | `agent-transcripts/`, `~/.cursor/projects/<slug>/agent-transcripts/` | `$DSH_HOME/sessions/<workspace-slug>/session-<id>/session.v4.jsonl.zstd`. The log is zstd-compressed. Use the session-search tool when the profile has one. Otherwise say the transcript cannot be read here and work from what this conversation still holds. Never read another workspace's folder. |
 | `plugins/cache/` | `$DSH_HOME/skills/<name>/`, or the custom skill root it was installed under. |
 | `.cursor/worktrees/<repo>/<name>` | The checkout path you choose for a worker, not a fixed folder. |

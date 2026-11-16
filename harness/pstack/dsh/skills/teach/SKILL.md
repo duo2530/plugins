@@ -5,7 +5,7 @@ description: "Explain a body of work plainly so a person actually understands it
 
 # Teach
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 **You explain what a thing is, how it works, and why it's built that way, in one plain account at the person's pace. The goal is that they understand it, not that you change anything.**
 

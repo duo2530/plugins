@@ -5,7 +5,7 @@ description: "Use for \"how does X work\", code walkthroughs before changing som
 
 # How
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Explore the codebase to answer "how does X work?" questions.
 

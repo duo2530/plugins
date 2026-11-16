@@ -5,7 +5,7 @@ description: "Keep a reviewable decision trail for long-running or unattended wo
 
 # Show me your work
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Keep one canonical log.
 

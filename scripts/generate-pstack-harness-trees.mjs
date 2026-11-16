@@ -30,7 +30,9 @@ After editing those sources, run \`${COMMAND}\` from the repository root and com
 
 const DSH_README = `# pstack for DeepSeek Harness
 
-The DeepSeek Harness (DSH) tree of pstack, generated from \`pstack/\`. It ships every pstack skill, the guide, and the [DSH adapter](./${ADAPTERS}/dsh.md). The [Cursor edition](https://github.com/cursor/plugins/tree/main/pstack) carries the full introduction.
+The DeepSeek Harness (DSH) tree of pstack, generated from \`pstack/\`. It ships every pstack skill, plus the \`pstack-adapter\` skill that maps Cursor names to DSH. The [Cursor edition](https://github.com/cursor/plugins/tree/main/pstack) carries the full introduction.
+
+Each bundle is self-contained. DSH installs all bundles into one flat root, so a skill that reached above its own folder would break, and the tree links anything outside itself to GitHub instead.
 
 ## Install
 
@@ -49,15 +51,16 @@ Restarting is not needed. Discovery watches the roots, so the next session catal
 
 ## Use it
 
-Read [\`${ADAPTERS}/dsh.md\`](./${ADAPTERS}/dsh.md) once per session before following a pstack skill. It maps Cursor tool names to DSH and lists what DSH does not have. Then start a task with \`/poteto-mode\`, or call the skill that fits.
+Load the \`pstack-adapter\` skill once per session before following a pstack skill. It maps Cursor tool names to DSH and lists what DSH does not have. Then start a task with \`/poteto-mode\`, or call the skill that fits.
 
-The guide's first page installs the Cursor edition. Use the steps above for DSH; the rest of the guide applies as written.
+The guide is not part of this tree, because DSH installs bundles into a flat root and a bundle cannot reach outside itself. A link to the guide opens on GitHub. Its first page installs the Cursor edition; use the steps above for DSH.
 
 ## What differs from the Cursor tree
 
 - **Every skill is model-invocable.** The Cursor tree sets \`disable-model-invocation: true\` on all but \`setup-pstack\`, because a person picks it from a menu. DSH routes through the \`skill\` tool, and that tool refuses a skill the catalog hides, so the flag would hide every routed skill from its only caller. The cost is one catalog entry per skill at session start.
 - **\`icon\` and \`color\` are dropped.** They describe Cursor's own UI.
-- **The agents are reference briefs.** \`agents/poteto-agent.md\` and \`agents/comment-sicko.md\` stay as files, because DSH has no agent types. The adapter says what to paste into a \`subagent\` prompt.
+- **The adapter is a skill.** \`pstack-adapter\` carries the mapping table, so every skill can point at it wherever the tree is installed.
+- **The agents are skills too.** \`poteto-agent\` and \`comment-sicko\` are bundles a delegate loads, because DSH has no agent types.
 - **Role models live in \`$DSH_HOME/AGENTS.md\`.** DSH loads that file into every session, so it replaces \`~/.cursor/rules/pstack-models.mdc\`.
 `;
 
@@ -75,7 +78,7 @@ const HARNESSES = [
     tree: "dsh",
     adapter: `${ADAPTERS}/dsh.md`,
     line:
-      "In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. " +
+      "In DSH, load the `pstack-adapter` skill once per session before you follow this skill. " +
       "It maps the Cursor names in pstack skills to DeepSeek Harness.",
     readme: DSH_README,
     dsh: true,
@@ -213,11 +216,60 @@ function checkDshSkill(path, source) {
   return found;
 }
 
+// DSH installs every bundle into one flat root, so a bundle that reached outside itself would break. The adapter and
+// the two agent briefs therefore ship as skills rather than as files above `skills/`.
+const DSH_BUNDLES = [
+  {
+    skill: "pstack-adapter",
+    source: `${ADAPTERS}/dsh.md`,
+    description:
+      "Read once per session before following any pstack skill. Maps the Cursor tool names, subagent fields, model roles, and paths in pstack skills to DeepSeek Harness.",
+  },
+  { skill: "poteto-agent", source: "agents/poteto-agent.md" },
+  { skill: "comment-sicko", source: "agents/comment-sicko.md" },
+];
+
+const POTETO_DELEGATE = "You are operating as poteto-mode's full agent style.";
+
+// The Cursor brief tells a delegate to search `~/.cursor/plugins/`; in DSH the skill catalog already has the skill.
+function dshPotetoAgent(body) {
+  const lines = body.split("\n");
+  const found = lines.map((line, index) => ({ line, index })).filter(({ line }) => line.startsWith(POTETO_DELEGATE));
+  if (found.length !== 1) {
+    problems.push(`agents/poteto-agent.md has ${found.length} delegate paragraphs, expected one, so the DSH rewrite has no target`);
+    return body;
+  }
+  lines[found[0].index] =
+    "You are operating as poteto-mode's full agent style. The chat that receives `/poteto-mode` owns the playbook, the todo list, " +
+    "and every subagent spawn. You are one of its delegates. Load the `poteto-mode` skill with the skill tool and read it in full " +
+    "before any work, including its inline Principles index. That load also carries the DSH adapter that maps Cursor names. " +
+    "Navigate to a leaf `principle-*` skill whenever you apply that principle.";
+  return lines.join("\n");
+}
+
+function dshExtraBundle(harness, bundle) {
+  const raw = text(readFileSync(join(PSTACK, bundle.source)));
+  const frontmatter = raw.match(/^---\n([\s\S]*?)\n---\n/);
+  const data = frontmatter?.[1] ?? "";
+  const description = bundle.description ?? data.match(/^description:(.*)$/m)?.[1].trim() ?? "";
+  let body = raw.slice(frontmatter?.[0].length ?? 0);
+  if (bundle.skill !== "pstack-adapter") body = body.replace(/^(# .*)\n+/m, `$1\n\n${harness.line}\n\n`);
+  if (bundle.skill === "poteto-agent") body = dshPotetoAgent(body);
+  return `---\nname: ${bundle.skill}\ndescription: ${description}\n---\n\n${body.trimStart()}`;
+}
+
 function render(harness) {
-  const copies = [...walk(SKILLS), ...walk(join(PSTACK, "agents")), ...walk(join(PSTACK, GUIDE)), join(PSTACK, harness.adapter)];
+  const copies = harness.dsh
+    ? [...walk(SKILLS)]
+    : [...walk(SKILLS), ...walk(join(PSTACK, "agents")), ...walk(join(PSTACK, GUIDE)), join(PSTACK, harness.adapter)];
   if (harness.sourceReadme) copies.push(join(PSTACK, "README.md"));
   const files = new Map(copies.map((path) => [key(PSTACK, path), file(path)]));
   if (harness.readme) files.set("README.md", { bytes: Buffer.from(harness.readme), executable: false });
+  if (harness.dsh) {
+    for (const bundle of DSH_BUNDLES) {
+      files.set(`skills/${bundle.skill}/SKILL.md`, { bytes: Buffer.from(dshExtraBundle(harness, bundle)), executable: false });
+    }
+  }
   files.set("LICENSE", file(join(PSTACK, "LICENSE")));
   if (harness.manifests) for (const manifest of MANIFESTS) files.set(manifest, file(join(PSTACK, "plugin.json")));
 
@@ -231,9 +283,12 @@ function render(harness) {
   }
   for (const [path, entry] of files) {
     if (!path.endsWith(".md")) continue;
+    // In DSH only another bundle is reachable, because the installed root is a flat list of bundles. Everything else
+    // links to GitHub, which the tree already does for files it never ships.
+    const reachable = (target) => (harness.dsh ? target.startsWith("skills/") && has(files, target) : has(files, target));
     const source = text(entry.bytes).replace(LINK, (link, href) => {
       const target = resolve(path, href);
-      if (!target || target.split("/")[0] === ".." || has(files, target)) return link;
+      if (!target || target.split("/")[0] === ".." || reachable(target)) return link;
       const kind = statSync(join(PSTACK, target)).isDirectory() ? "tree" : "blob";
       return `](${GITHUB}/${kind}/main/pstack/${target}${href.slice(href.search(/[#?]|$/))})`;
     });
@@ -266,8 +321,17 @@ for (const harness of HARNESSES) {
   for (const [path, entry] of files) {
     if (/^skills\/[^/]+\/SKILL\.md$/.test(path)) problems.push(...checkDshSkill(path, text(entry.bytes)));
   }
-  for (const skill of skills) {
-    if (!files.has(`skills/${skill}/SKILL.md`)) problems.push(`harness/pstack/dsh/skills/${skill}/SKILL.md is missing`);
+  for (const [path, entry] of files) {
+    if (!path.startsWith("skills/") || !path.endsWith(".md")) continue;
+    for (const [, href] of text(entry.bytes).matchAll(LINK)) {
+      const target = resolve(path, href);
+      if (target && !target.startsWith("skills/")) {
+        problems.push(`harness/pstack/dsh/${path} links to ${href}, which leaves the flat skills root once installed`);
+      }
+    }
+  }
+  for (const bundle of [...skills, ...DSH_BUNDLES.map(({ skill }) => skill)]) {
+    if (!files.has(`skills/${bundle}/SKILL.md`)) problems.push(`harness/pstack/dsh/skills/${bundle}/SKILL.md is missing`);
   }
 }
 for (const link of dangling) console.log(`FAIL ${link}`);

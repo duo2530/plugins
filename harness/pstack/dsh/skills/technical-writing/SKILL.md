@@ -5,7 +5,7 @@ description: "Layered technical-writing standard: Diátaxis structure, Google de
 
 # Technical writing
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Write so a tired engineer understands on the first read. Apply all four layers.
 

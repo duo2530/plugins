@@ -5,7 +5,7 @@ description: Spawn three parallel review subagents over the active transcript, s
 
 # Reflect
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Mine the current conversation for durable learnings, then route them into skill edits.
 

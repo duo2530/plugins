@@ -5,7 +5,7 @@ description: "Spawn Comment Sicko, fix accepted findings, and offer encodings fo
 
 # No comments
 
-In DSH, read [the DSH adapter](../../docs/harness/dsh.md) once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
+In DSH, load the `pstack-adapter` skill once per session before you follow this skill. It maps the Cursor names in pstack skills to DeepSeek Harness.
 
 Spawn Comment Sicko. Act on accepted findings.
 
